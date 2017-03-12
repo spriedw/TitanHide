@@ -121,6 +121,14 @@ public:
         IN ULONG OutputBufferLength,
         OUT PULONG ReturnLength OPTIONAL);
 
+	static NTSTATUS NTAPI ZwEnumerateValueKey(
+		IN HANDLE KeyHandle,
+		IN ULONG Index,
+		IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+		_Out_opt_ PVOID KeyValueInformation,
+		IN ULONG Length,
+		OUT PULONG ResultLength);
+
     static bool UndocumentedInit();
     static PVOID GetKernelBase(PULONG pImageSize = NULL);
 };

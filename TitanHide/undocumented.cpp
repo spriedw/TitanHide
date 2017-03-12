@@ -99,6 +99,15 @@ typedef NTSTATUS(NTAPI* NTSYSTEMDEBUGCONTROL)(
     OUT PULONG ReturnLength OPTIONAL
 );
 
+typedef NTSTATUS(NTAPI* ZWENUMERATEVALUEKEY)(
+	IN HANDLE KeyHandle,
+	IN ULONG Index,
+	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+	_Out_opt_ PVOID KeyValueInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+);
+
 static ZWQUERYINFORMATIONPROCESS ZwQIP = 0;
 static ZWQUERYINFORMATIONTHREAD ZwQIT = 0;
 static NTQUERYOBJECT NtQO = 0;
@@ -113,6 +122,7 @@ static NTSETINFORMATIONTHREAD NtSIT = 0;
 static NTSETINFORMATIONPROCESS NtSIP = 0;
 static NTQUERYINFORMATIONPROCESS NtQIP = 0;
 static NTSYSTEMDEBUGCONTROL NtSDBC = 0;
+static ZWENUMERATEVALUEKEY ZwEVK = 0;
 
 NTSTATUS NTAPI Undocumented::ZwQueryInformationProcess(
     IN HANDLE ProcessHandle,
@@ -237,6 +247,17 @@ NTSTATUS NTAPI Undocumented::NtSystemDebugControl(
     OUT PULONG ReturnLength)
 {
     return NtSDBC(Command, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, ReturnLength);
+}
+
+NTSTATUS NTAPI Undocumented::ZwEnumerateValueKey(
+	IN HANDLE KeyHandle,
+	IN ULONG Index,
+	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+	_Out_opt_ PVOID KeyValueInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength)
+{
+	return ZwEVK(KeyHandle, Index, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
 }
 
 bool Undocumented::UndocumentedInit()

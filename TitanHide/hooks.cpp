@@ -14,6 +14,7 @@ static HOOK hNtClose = 0;
 static HOOK hNtSetInformationThread = 0;
 static HOOK hNtSetContextThread = 0;
 static HOOK hNtSystemDebugControl = 0;
+static HOOK hZwEnumerateValueKey = 0;
 static FAST_MUTEX gDebugPortMutex;
 
 static NTSTATUS NTAPI HookNtSetInformationThread(
@@ -309,6 +310,40 @@ static NTSTATUS NTAPI HookNtSystemDebugControl(
     return Undocumented::NtSystemDebugControl(Command, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, ReturnLength);
 }
 
+static NTSTATUS NTAPI HookZwEnumerateValueKey(
+	IN HANDLE KeyHandle,
+	IN ULONG Index,
+	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+	_Out_opt_ PVOID KeyValueInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength) {
+
+	NTSTATUS ret;
+	PWSTR ValueName;
+	ULONG pid;
+	
+	pid = (ULONG)PsGetCurrentProcessId();
+	Log("[SnowHide] ZwEnumerateValueKey by %d\r\n", pid);
+
+	// Call the original API
+	ret = Undocumented::ZwEnumerateValueKey(KeyHandle, Index, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
+	if (KeyValueInformationClass == KeyValueFullInformation)
+	{
+		ValueName = ((PKEY_VALUE_FULL_INFORMATION)KeyValueInformation)->Name;
+		// If the registry value name contains _snow_ skip over the value and call the original
+		if (ValueName != NULL && wcsstr(ValueName, L"_snow_") != NULL)
+		{
+			Log("[SnowHide] %d [%d] -- %ws\n", Index, KeyValueInformationClass, ValueName);
+
+			// Skip
+			Index++;
+			ValueName = NULL;
+			return Undocumented::ZwEnumerateValueKey(KeyHandle, Index, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
+		}
+	}
+	return ret;
+}
+
 int Hooks::Initialize()
 {
     ExInitializeFastMutex(&gDebugPortMutex);
@@ -334,6 +369,9 @@ int Hooks::Initialize()
     hNtSystemDebugControl = SSDT::Hook("NtSystemDebugControl", (void*)HookNtSystemDebugControl);
     if(hNtSystemDebugControl)
         hook_count++;
+	hZwEnumerateValueKey = SSDT::Hook("ZwEnumerateValueKey", (void*)HookZwEnumerateValueKey);
+	if (hZwEnumerateValueKey)
+		hook_count++;
     return hook_count;
 }
 
@@ -346,4 +384,5 @@ void Hooks::Deinitialize()
     SSDT::Unhook(hNtClose, true);
     SSDT::Unhook(hNtSetContextThread, true);
     SSDT::Unhook(hNtSystemDebugControl, true);
+	SSDT::Unhook(hZwEnumerateValueKey, true);
 }

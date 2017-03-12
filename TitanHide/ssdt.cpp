@@ -28,6 +28,7 @@ static SSDTStruct* SSDTfind()
         UNICODE_STRING routineName;
         RtlInitUnicodeString(&routineName, L"KeServiceDescriptorTable");
         SSDT = (SSDTStruct*)MmGetSystemRoutineAddress(&routineName);
+		Log("[SnowHide] SSDT routineName - %s\n", routineName);
 #else
         //x64 code
         ULONG kernelSize;
@@ -259,6 +260,7 @@ void SSDT::Hook(HOOK hHook)
         return;
     }
     InterlockedSet(&SSDT_Table[hHook->SSDTindex], hHook->SSDTnew);
+	Log("[SnowHide] Hooking %lu is now %lu", hHook->SSDTold, hHook->SSDTnew);
 }
 
 void SSDT::Unhook(HOOK hHook, bool free)
@@ -278,6 +280,7 @@ void SSDT::Unhook(HOOK hHook, bool free)
         return;
     }
     InterlockedSet(&SSDT_Table[hHook->SSDTindex], hHook->SSDTold);
+	Log("[SnowHide] UnHooking %lu is now %lu", hHook->SSDTnew, hHook->SSDTold);
 #ifdef _WIN64
     if(free)
         Hooklib::Unhook(hHook, true);

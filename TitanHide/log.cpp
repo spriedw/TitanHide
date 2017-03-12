@@ -6,9 +6,9 @@ void Log(const char* format, ...)
     va_list vl;
     va_start(vl, format);
     _vsnprintf(msg, sizeof(msg) / sizeof(char), format, vl);
-#ifdef _DEBUG
+//#ifdef _DEBUG
     DbgPrint(msg);
-#endif
+//#endif
     va_end(format);
     UNICODE_STRING FileName;
     OBJECT_ATTRIBUTES objAttr;
