@@ -368,6 +368,12 @@ bool Undocumented::UndocumentedInit()
         if(!NtSDBC)
             return false;
     }
+	if (!ZwEVK)
+	{
+		ZwEVK = (ZWENUMERATEVALUEKEY)SSDT::GetFunctionAddress("ZwEnumerateValueKey");
+		if (!ZwEVK)
+			return false;
+	}
     return true;
 }
 
